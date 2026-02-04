@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 
 import Sidebar from "../../component/sidebar";
 import { motion } from "framer-motion";
@@ -12,9 +13,10 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+    const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen bg-gray-900 text-white">
-      <Sidebar />
+      <Sidebar open = {open} setOpen = {setOpen}/>
 
       {/* MAIN CONTENT */}
       <main className="flex-1 p-10 space-y-10 overflow-y-auto">
@@ -149,7 +151,7 @@ function StatCard({
   title: string;
   value: string;
   trend: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   positive: boolean;
 }) {
   return (
