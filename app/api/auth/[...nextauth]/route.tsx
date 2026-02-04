@@ -1,31 +1,46 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import NextAuth, { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import User from "@/models/users";
 import { connectDB } from "@/lib/db";
+import User from "@/models/users";
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
-    Credentials({
+    CredentialsProvider({
+      name: "Credentials",
       credentials: {
-        email: {},
-        password: {},
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
         await connectDB();
-        const user = await User.findOne({ email: credentials!.email });
+        const user = await User.findOne({ email: credentials.email });
+
         if (!user) return null;
 
-        const match = await bcrypt.compare(
-          credentials!.password,
+        const isValid = await bcrypt.compare(
+          credentials.password,
           user.password
         );
 
-        return match ? user : null;
+        if (!isValid) return null;
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],
-  session: { strategy: "jwt" },
+
+  session: {
+    strategy: "jwt", // ✅ now correctly typed
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
